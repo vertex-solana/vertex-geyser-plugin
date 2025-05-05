@@ -1,13 +1,13 @@
-use ::{
-    agave_geyser_plugin_interface::geyser_plugin_interface::{
-        GeyserPlugin,
-        ReplicaAccountInfoVersions,
-        ReplicaBlockInfoVersions,
-        ReplicaTransactionInfoVersions,
-        Result as PluginResult,
+use {
+    crate::config::Config,
+    ::{
+        agave_geyser_plugin_interface::geyser_plugin_interface::{
+            GeyserPlugin, GeyserPluginError, ReplicaAccountInfoVersions, ReplicaBlockInfoVersions,
+            ReplicaTransactionInfoVersions, Result as PluginResult,
+        },
+        log::info,
+        std::{fmt::Debug, fs::File, io::Read},
     },
-    log::info,
-    std::fmt::Debug,
 };
 
 #[derive(Default)]
@@ -27,7 +27,25 @@ impl GeyserPlugin for GeyserPluginVertex {
     }
 
     fn on_load(&mut self, config_file: &str, _is_reload: bool) -> PluginResult<()> {
-        println!("🟢 Plugin loaded: config_file = {}", config_file);
+        solana_logger::setup_with_default("info");
+        info!(
+            "Loading plugin {:?} from config_file {:?}",
+            self.name(),
+            config_file
+        );
+        let mut file = File::open(config_file)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+
+        let config: Config = serde_json::from_str(&contents).map_err(|err| {
+            GeyserPluginError::ConfigFileReadError {
+                msg: format!(
+                    "The config file is not in the JSON format expected: {:?}",
+                    err
+                ),
+            }
+        })?;
+
         Ok(())
     }
 
@@ -36,11 +54,11 @@ impl GeyserPlugin for GeyserPluginVertex {
     }
 
     fn update_account(
-            &self,
-            account: ReplicaAccountInfoVersions,
-            slot: solana_sdk::clock::Slot,
-            is_startup: bool,
-        ) -> PluginResult<()> {
+        &self,
+        account: ReplicaAccountInfoVersions,
+        slot: solana_sdk::clock::Slot,
+        is_startup: bool,
+    ) -> PluginResult<()> {
         Ok(())
     }
 
@@ -53,16 +71,19 @@ impl GeyserPlugin for GeyserPluginVertex {
         &self,
         slot: u64,
         parent: Option<u64>,
-        status: &agave_geyser_plugin_interface::geyser_plugin_interface::SlotStatus
+        status: &agave_geyser_plugin_interface::geyser_plugin_interface::SlotStatus,
     ) -> PluginResult<()> {
-        info!("update_slot_status called: slot={}, parent={:?}, status={:?}", slot, parent, status);
+        info!(
+            "update_slot_status called: slot={}, parent={:?}, status={:?}",
+            slot, parent, status
+        );
         Ok(())
     }
 
     fn notify_transaction(
         &self,
         transaction: ReplicaTransactionInfoVersions,
-        slot: u64
+        slot: u64,
     ) -> PluginResult<()> {
         info!("notify_transaction called: slot={}", slot);
         Ok(())

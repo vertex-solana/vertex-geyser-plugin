@@ -5,6 +5,7 @@ use ::{
     serde_derive::{Deserialize, Serialize},
     serde_json,
     std::{fs::read_to_string, path::Path},
+    thiserror::Error,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,4 +81,19 @@ pub struct GeyserPluginPostgresConfig {
     /// and ignore upsetr accounts (at_startup) that should already exist in DB
     #[serde(default)]
     pub skip_upsert_existing_accounts_at_startup: bool,
+}
+
+#[derive(Error, Debug)]
+pub enum GeyserPluginPostgresError {
+    #[error("Error connecting to the backend data store. Error message: ({msg})")]
+    DataStoreConnectionError { msg: String },
+
+    #[error("Error preparing data store schema. Error message: ({msg})")]
+    DataSchemaError { msg: String },
+
+    #[error("Error preparing data store schema. Error message: ({msg})")]
+    ConfigurationError { msg: String },
+
+    #[error("Replica account V0.0.1 not supported anymore")]
+    ReplicaAccountV001NotSupported,
 }
