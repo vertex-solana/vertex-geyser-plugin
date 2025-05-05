@@ -1,8 +1,11 @@
-use agave_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin;
-use geyser_plugin_vertex::GeyserPluginVertex;
+use {
+    agave_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin,
+    geyser_plugin_vertex::GeyserPluginVertex,
+};
 
 pub mod config;
 pub mod geyser_plugin_vertex;
+pub mod postgres_client;
 
 #[no_mangle]
 #[allow(improper_ctypes_definitions)]
